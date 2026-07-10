@@ -191,6 +191,8 @@ button{ font: inherit; color: inherit; }
   .set li:hover .label-top > div,
   .set li:hover .label-bot > div{ transform: translateY(0); }
 }
+.set li.show-label .label-top > div,
+.set li.show-label .label-bot > div{ transform: translateY(0); }
 @media (prefers-reduced-motion: reduce){
   .label > div{ transition:none; }
 }
@@ -709,15 +711,18 @@ dialog p + p{ margin-top:.8rem; }
     if (e.key === "ArrowLeft"){ page(-1); e.preventDefault(); }
   });
 
-  /* drag with momentum */
+  /* drag with momentum + a still tap on touch screens reveals the labels */
+  var moved = false, downX = 0, downY = 0;
   strip.addEventListener("pointerdown", function(e){
-    dragging = true; velocity = 0;
+    dragging = true; velocity = 0; moved = false;
+    downX = e.clientX; downY = e.clientY;
     lastX = e.clientX; lastT = performance.now();
     strip.classList.add("dragging");
     strip.setPointerCapture(e.pointerId);
   });
   strip.addEventListener("pointermove", function(e){
     if (!dragging) return;
+    if (Math.abs(e.clientX - downX) > 8 || Math.abs(e.clientY - downY) > 8) moved = true;
     var now = performance.now();
     var dx = e.clientX - lastX;
     target -= dx;
@@ -726,14 +731,25 @@ dialog p + p{ margin-top:.8rem; }
     velocity = -dx / dt * 16;           /* px per frame */
     lastX = e.clientX; lastT = now;
   });
-  function endDrag(){
+  function clearShown(){
+    track.querySelectorAll("li.show-label").forEach(function(li){ li.classList.remove("show-label"); });
+  }
+  function endDrag(e){
     if (!dragging) return;
     dragging = false;
     strip.classList.remove("dragging");
     if (reduced) velocity = 0;
+    if (e && !moved && (e.pointerType === "touch" || e.pointerType === "pen")){
+      velocity = 0;
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var li = el && el.closest ? el.closest(".set li") : null;
+      var wasShown = li && li.classList.contains("show-label");
+      clearShown();
+      if (li && !wasShown) li.classList.add("show-label");
+    }
   }
   strip.addEventListener("pointerup", endDrag);
-  strip.addEventListener("pointercancel", endDrag);
+  strip.addEventListener("pointercancel", function(){ endDrag(null); });
 
   /* wheel / trackpad */
   strip.addEventListener("wheel", function(e){
