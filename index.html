@@ -588,7 +588,6 @@ dialog p + p{ margin-top:.8rem; }
 
   var setW = 0;
   var snapCoarse = window.matchMedia("(pointer: coarse)").matches;
-  var needSnap = false;
   var current = 0;        /* rendered position   */
   var target = 0;         /* where we are heading */
   var velocity = 0;
@@ -611,6 +610,18 @@ dialog p + p{ margin-top:.8rem; }
   });
 
   function mod(n, m){ return ((n % m) + m) % m; }
+
+  /* round a destination to the nearest image-centred position */
+  function snapped(t){
+    if (!setW || !itemCenters.length) return t;
+    var vw2 = strip.clientWidth / 2, best = 0, bestAbs = Infinity;
+    for (var si = 0; si < itemCenters.length; si++){
+      var d = mod(itemCenters[si] - vw2 - t, setW);
+      if (d > setW / 2) d -= setW;
+      if (Math.abs(d) < bestAbs){ bestAbs = Math.abs(d); best = d; }
+    }
+    return t + best;
+  }
 
   /* ———— the line bar ———— */
   var ticker = document.getElementById("ticker");
@@ -670,18 +681,6 @@ dialog p + p{ margin-top:.8rem; }
       target += velocity;
       velocity *= 0.94;                 /* friction */
     }
-    /* on touch screens: once movement settles, centre the nearest picture */
-    if (snapCoarse && needSnap && !dragging && !scrubbing && Math.abs(velocity) < 1.2 && setW > 0){
-      needSnap = false; velocity = 0;
-      var vw2 = strip.clientWidth / 2, best = 0, bestAbs = Infinity;
-      for (var si = 0; si < itemCenters.length; si++){
-        var d = (((itemCenters[si] - vw2 - target) % setW) + setW) % setW;
-        if (d > setW / 2) d -= setW;
-        if (Math.abs(d) < bestAbs){ bestAbs = Math.abs(d); best = d; }
-      }
-      target += best;
-      if (reduced) current = target;
-    }
     if (setW > 0){
       /* keep numbers small; wrap both together so the lerp never sees the jump */
       if (current > setW && target > setW){ current -= setW; target -= setW; before -= setW; }
@@ -723,8 +722,8 @@ dialog p + p{ margin-top:.8rem; }
     target = scrubStart + (e.clientX - scrubX) / r.width * setW;
     if (reduced) current = target;
   });
-  ticker.addEventListener("pointerup", function(){ scrubbing = false; needSnap = true; });
-  ticker.addEventListener("pointercancel", function(){ scrubbing = false; needSnap = true; });
+  ticker.addEventListener("pointerup", function(){ scrubbing = false; if (snapCoarse){ target = snapped(target); if (reduced) current = target; } });
+  ticker.addEventListener("pointercancel", function(){ scrubbing = false; if (snapCoarse){ target = snapped(target); if (reduced) current = target; } });
   ticker.addEventListener("pointerleave", function(){ if (!scrubbing) hoverF = null; });
   ticker.addEventListener("keydown", function(e){
     if (e.key === "ArrowRight"){ page(1); e.preventDefault(); }
@@ -758,7 +757,12 @@ dialog p + p{ margin-top:.8rem; }
     if (!dragging) return;
     dragging = false;
     strip.classList.remove("dragging");
-    if (moved) needSnap = true;
+    if (snapCoarse && moved){
+      /* where would the friction glide end? aim the ease at the nearest centred image instead */
+      target = snapped(target + velocity * (0.94 / (1 - 0.94)));
+      velocity = 0;
+      if (reduced) current = target;
+    }
     if (reduced) velocity = 0;
     if (e && !moved && (e.pointerType === "touch" || e.pointerType === "pen")){
       velocity = 0;
@@ -784,7 +788,7 @@ dialog p + p{ margin-top:.8rem; }
   function page(dir){
     velocity = 0;
     target += dir * Math.min(strip.clientWidth * 0.55, setW * 0.4);
-    needSnap = true;
+    if (snapCoarse) target = snapped(target);
     if (reduced) current = target;
   }
   document.getElementById("nav-prev").addEventListener("click", function(){ page(-1); });
