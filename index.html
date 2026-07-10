@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peruso — Verlobungsringe & Trauringe, von Hand gefertigt seit 1890</title>
+<meta name="description" content="Peruso fertigt Verlobungsringe, Trauringe und Liebesschmuck von Hand — seit 1890. Vereinbaren Sie ein unverbindliches Erstgespräch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Mulish:wght@300..700&display=swap" rel="stylesheet">
+<style>
+/* ————————————————————————————————————————
+   PERUSO — tokens
+———————————————————————————————————————— */
+:root{
+  --porcelain: oklch(97.2% 0.007 84);
+  --champagne: oklch(93.2% 0.016 84);
+  --ink:       oklch(30% 0.014 78);
+  --ink-soft:  oklch(46% 0.018 78);
+  --bronze:    oklch(56% 0.078 80);
+  --bronze-deep: oklch(48% 0.078 80);
+  --hairline:  oklch(30% 0.014 78 / .16);
+
+  --font-display: "Marcellus", "Times New Roman", serif;
+  --font-body: "Mulish", "Helvetica Neue", sans-serif;
+
+  --pad-x: clamp(1.1rem, 3vw, 2.5rem);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+
+  /* ratio between logo section and image section */
+  --ratio-identity: 22fr;
+  --ratio-gallery: 78fr;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html, body{ height:100%; }
+body{
+  overflow:hidden;
+  background: var(--porcelain);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight:380;
+  font-size:1rem;
+  line-height:1.6;
+  -webkit-font-smoothing: antialiased;
+
+  display:grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+::selection{ background: var(--bronze); color: var(--porcelain); }
+
+[data-lang="de"] [lang="en"]{ display:none; }
+[data-lang="en"] [lang="de"]{ display:none; }
+
+button{ font: inherit; color: inherit; }
+
+/* ————————————————————————————————————————
+   top bar
+———————————————————————————————————————— */
+.bar-top{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding: clamp(.9rem,2vh,1.4rem) var(--pad-x) 0;
+}
+
+/* the contact rectangle — bronze, light text */
+.btn-contact{
+  all:unset; cursor:pointer;
+  background: var(--bronze);
+  color: var(--porcelain);
+  font-size:.72rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  line-height:1;
+  padding:.85rem 1.4rem;
+  transition: background-color .35s var(--ease-out);
+}
+.btn-contact:hover{ background: var(--bronze-deep); }
+.btn-contact:focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
+
+/* language switch — square sliding switch */
+.lang-switch{
+  position:relative;
+  display:grid; grid-template-columns: 1fr 1fr;
+  border:1.5px solid var(--bronze);
+  font-size:.72rem; font-weight:600; letter-spacing:.12em;
+}
+.lang-switch .knob{
+  position:absolute; top:0; left:0;
+  width:50%; height:100%;
+  background: var(--bronze);
+  transition: transform .35s var(--ease-out);
+}
+[data-lang="en"] .lang-switch .knob{ transform: translateX(100%); }
+.lang-switch button{
+  all:unset; cursor:pointer;
+  position:relative; z-index:1;
+  width:2.7rem; padding:.5rem 0; text-align:center; line-height:1;
+  color: var(--ink-soft);
+  transition: color .35s var(--ease-out);
+}
+.lang-switch button[aria-pressed="true"]{ color: var(--porcelain); }
+.lang-switch button:hover{ color: var(--ink); }
+.lang-switch button[aria-pressed="true"]:hover{ color: var(--porcelain); }
+.lang-switch button:focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
+
+/* ————————————————————————————————————————
+   stage — identity : gallery = 22 : 78
+———————————————————————————————————————— */
+.stage{
+  min-height:0;
+  display:grid;
+  grid-template-rows: minmax(0, var(--ratio-identity)) minmax(0, var(--ratio-gallery));
+}
+
+.identity{
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  gap: clamp(.55rem,1.3vh,.85rem);
+  padding: clamp(.15rem,.8vh,.6rem) var(--pad-x) 0;
+}
+.identity .logo{
+  width: clamp(86px, 8.5vw, 108px);
+  height:auto;
+  color: var(--bronze);
+}
+.identity .subline{
+  font-size:.64rem; font-weight:500;
+  letter-spacing:.26em; text-transform:uppercase; text-indent:.26em;
+  color: var(--ink-soft);
+  text-align:center;
+}
+
+/* ———— looping gallery ———— */
+.gallery{
+  min-height:0;
+  display:grid;
+  grid-template-rows: minmax(0,1fr) auto;
+}
+.stripwrap{
+  position:relative;
+  min-height:0;
+}
+
+.strip{
+  height:100%;
+  container-type: size;
+  overflow:hidden;
+  display:flex; align-items:center;
+  cursor:grab;
+  touch-action: pan-y;
+  user-select:none;
+}
+.strip.dragging{ cursor:grabbing; }
+.strip:focus-visible{ outline:2px solid var(--bronze); outline-offset:-2px; }
+
+.track{
+  display:flex; align-items:center;
+  width:max-content;
+  will-change: transform;
+}
+.set{
+  display:flex; align-items:center;
+  list-style:none;
+  gap: clamp(1rem, 2.2vw, 2.2rem);
+  padding-right: clamp(1rem, 2.2vw, 2.2rem);
+}
+.set li{ flex:none; position:relative; }
+
+/* ———— item hover: masked labels sliding out of the image edges ———— */
+.label{
+  position:absolute; left:0;
+  overflow:hidden;
+  font-size:.66rem; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase;
+  line-height:1.4;
+  color: var(--ink-soft);
+  pointer-events:none;
+  white-space:nowrap;
+}
+.label-top{ bottom:100%; margin-bottom:.7rem; }
+.label-bot{ top:100%; margin-top:.7rem; }
+.label > div{
+  transition: transform .7s cubic-bezier(.19,1,.22,1);   /* ease-out-expo */
+}
+.label-top > div{ transform: translateY(100%); }
+.label-bot > div{ transform: translateY(-100%); }
+@media (hover:hover){
+  .set li:hover .label-top > div,
+  .set li:hover .label-bot > div{ transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .label > div{ transition:none; }
+}
+.set img{
+  display:block; width:auto;
+  height:56vh; height:68cqh;
+  object-fit:cover;
+  pointer-events:none;
+  -webkit-user-drag:none; user-select:none;
+}
+/* slightly different heights — a skyline of rings */
+.set li:nth-child(1) img{ height:50vh; height:84cqh; }
+.set li:nth-child(2) img{ height:39vh; height:62cqh; }
+.set li:nth-child(3) img{ height:45vh; height:74cqh; }
+.set li:nth-child(4) img{ height:35vh; height:54cqh; }
+.set li:nth-child(5) img{ height:47vh; height:78cqh; }
+.set li:nth-child(6) img{ height:37vh; height:58cqh; }
+.set li:nth-child(7) img{ height:43vh; height:70cqh; }
+
+/* ———— arrows on either side, inverting over images ———— */
+.nav{
+  all:unset; cursor:pointer;
+  position:absolute; top:50%; transform: translateY(-50%);
+  z-index:5;
+  width:3rem; height:3.4rem;
+  display:grid; place-items:center;
+  color:#fff;
+  mix-blend-mode: difference;   /* light over images, dark over the page */
+  transition: opacity .3s;
+}
+.nav svg{ width:1.15rem; height:1.9rem; transition: transform .35s var(--ease-out); }
+.nav:hover svg{ transform: scale(1.15); }
+.nav:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+.nav-prev{ left: calc(var(--pad-x) - .6rem); }
+.nav-next{ right: calc(var(--pad-x) - .6rem); }
+
+/* ———— the line bar — a ruler you can drag ———— */
+.ticker{
+  height: clamp(2.6rem, 5vh, 3.4rem);
+  display:flex; align-items:center;
+  padding: 0 var(--pad-x);
+  cursor: ew-resize;
+  touch-action:none;
+  user-select:none;
+}
+.ticker:focus-visible{ outline:2px solid var(--bronze); outline-offset:-2px; }
+.ticker-inner{
+  position:relative;
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; height:100%;
+}
+.tick{
+  width:1px; height:32px;
+  background: var(--ink);
+  opacity:.25;
+  transform: scaleY(.26);
+  will-change: transform, opacity;
+}
+
+/* entrance */
+.identity, .gallery{ opacity:0; }
+.loaded .identity{ opacity:1; transition: opacity 1s var(--ease-out); }
+.loaded .gallery{ opacity:1; transition: opacity 1.2s var(--ease-out) .25s; }
+
+@media (prefers-reduced-motion: reduce){
+  .identity, .gallery{ opacity:1; transition:none; }
+}
+
+/* ————————————————————————————————————————
+   bottom bar
+———————————————————————————————————————— */
+.bar-bottom{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding: clamp(.8rem,2vh,1.2rem) var(--pad-x);
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  color: var(--ink-soft);
+}
+.legal{ display:flex; gap: clamp(1rem,2.5vw,2rem); }
+.linklike{
+  all:unset; cursor:pointer;
+  letter-spacing:inherit; text-transform:inherit; font-size:inherit; color:inherit;
+  background-image: linear-gradient(var(--bronze), var(--bronze));
+  background-repeat:no-repeat; background-size:0% 1px; background-position:0 100%;
+  transition: background-size .4s var(--ease-out), color .3s;
+  padding-bottom:.2em;
+}
+.linklike:hover, .linklike:focus-visible{ color: var(--ink); background-size:100% 1px; }
+.linklike:focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
+
+/* ————————————————————————————————————————
+   dialogs
+———————————————————————————————————————— */
+dialog{
+  margin:auto;
+  width: min(560px, calc(100vw - 2.5rem));
+  max-height: min(82dvh, 44rem);
+  overflow:auto;
+  border:1px solid var(--hairline);
+  background: var(--porcelain);
+  color: var(--ink);
+  padding: clamp(1.8rem,4vw,3rem);
+}
+dialog::backdrop{ background: oklch(30% 0.014 78 / .28); }
+dialog[open]{ animation: rise .45s var(--ease-out); }
+@keyframes rise{
+  from{ opacity:0; transform: translateY(14px); }
+  to{   opacity:1; transform:none; }
+}
+@media (prefers-reduced-motion: reduce){ dialog[open]{ animation:none; } }
+
+.dialog-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+  margin-bottom: clamp(1.2rem,3vh,1.8rem);
+}
+.dialog-label{
+  font-size:.72rem; font-weight:600; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--bronze-deep);
+  padding-top:.4rem;
+}
+.btn-close{
+  all:unset; cursor:pointer;
+  width:2.4rem; height:2.4rem;
+  display:grid; place-items:center;
+  border:1.5px solid var(--hairline);
+  color: var(--ink-soft);
+  transition: border-color .3s, color .3s;
+  flex:none;
+}
+.btn-close:hover{ border-color: var(--bronze); color: var(--ink); }
+.btn-close:focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
+.btn-close svg{ width:.9rem; height:.9rem; }
+
+dialog h2{
+  font-family: var(--font-display);
+  font-weight:400;
+  font-size: clamp(1.6rem,4vw,2.2rem);
+  line-height:1.16;
+  margin-bottom: clamp(1rem,2.5vh,1.4rem);
+}
+dialog p{ color: var(--ink-soft); font-size:.95rem; }
+dialog p + p{ margin-top:.8rem; }
+
+.contact-rows{
+  margin-top: clamp(1.4rem,3.5vh,2rem);
+  padding-top: clamp(1.2rem,3vh,1.6rem);
+  border-top:1px solid var(--hairline);
+  display:flex; flex-direction:column; gap:1.1rem;
+}
+.contact-row .contact-label{
+  font-size:.68rem; font-weight:600; letter-spacing:.2em; text-transform:uppercase;
+  color: var(--ink-soft); margin-bottom:.2rem;
+}
+.contact-row a{
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem,3.2vw,1.6rem); font-weight:400;
+  color: var(--ink); text-decoration:none;
+  background-image: linear-gradient(var(--bronze), var(--bronze));
+  background-repeat:no-repeat; background-size:0% 1px; background-position:0 100%;
+  transition: background-size .45s var(--ease-out);
+  padding-bottom:.12em;
+}
+.contact-row a:hover, .contact-row a:focus-visible{ background-size:100% 1px; }
+.contact-row a:focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
+
+/* ————————————————————————————————————————
+   small screens
+———————————————————————————————————————— */
+@media (max-width: 560px){
+  .btn-contact{ font-size:.62rem; letter-spacing:.1em; padding:.7rem 1rem; }
+  .identity .logo{ width: clamp(78px, 21vw, 98px); }
+  .bar-bottom{ font-size:.62rem; }
+  .nav{ width:2.4rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar-top">
+  <button type="button" class="btn-contact" data-dialog="dlg-contact">
+    <span lang="de">Kontaktiere uns</span><span lang="en">Contact us</span>
+  </button>
+  <nav class="lang-switch" aria-label="Sprache / Language">
+    <span class="knob" aria-hidden="true"></span>
+    <button type="button" id="btn-de" aria-pressed="true" aria-label="Deutsch">DE</button>
+    <button type="button" id="btn-en" aria-pressed="false" aria-label="English">EN</button>
+  </nav>
+</header>
+
+<main class="stage">
+  <div class="identity">
+    <!-- Peruso logo -->
+    <svg class="logo" viewBox="0 0 140 119" role="img" aria-label="Peruso">
+      <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M127.355 97.5733C133.482 97.5733 139.691 101.213 139.691 107.959C139.691 114.764 133.455 118.124 127.355 118.124C121.256 118.124 115.019 114.68 115.019 107.878C115.019 100.851 121.256 97.5733 127.355 97.5733ZM72.6762 98.1301L72.7041 107.683C72.7041 112.043 74.9841 113.543 78.2818 113.543C81.2751 113.543 83.6389 111.598 83.6389 107.571V98.1301H89.0509V107.627C89.0509 113.932 84.958 117.875 78.2818 117.875C71.413 117.875 67.2362 113.959 67.2641 107.878C67.2641 104.683 67.2921 101.324 67.2921 98.1301H72.6762ZM102.324 97.6292C105.73 97.6292 108.779 98.4623 112.132 100.268L110.456 103.795C107.599 102.378 104.852 101.713 102.324 101.713C98.3673 101.713 97.4334 102.906 97.4334 103.628C97.4334 104.905 100.978 105.128 102.406 105.212C102.571 105.212 102.681 105.239 102.791 105.239C106.692 105.545 112.599 106.183 112.599 111.487C112.599 116.652 106.115 117.847 102.132 117.847C98.4501 117.847 96.1153 117.068 92.2957 115.069L94.0548 111.293C97.7078 112.903 99.9338 113.737 101.748 113.737C104.274 113.737 107.27 113.043 107.27 111.487C107.27 110.737 106.445 110.293 105.098 110.015C104.164 109.821 103.038 109.71 101.857 109.6C101.253 109.544 100.565 109.488 99.9059 109.404C96.1422 108.932 92.186 107.878 92.186 103.795C92.186 98.6578 98.6148 97.6292 102.324 97.6292ZM56.1068 98.1291C60.997 98.1291 63.5523 100.463 63.5523 104.016C63.5523 106.905 60.6957 109.183 57.5357 109.904L64.1011 116.624V117.597H58.8268L51.6287 110.265H49.5134V117.597H44.0735L44.0465 98.1291H56.1068ZM40.224 98.1291V102.129H27.6967C27.6967 103.406 27.6688 104.683 27.6688 105.989H38.385V109.877H27.6967V113.569H40.5802V117.597H22.1739L22.2019 98.1291H40.224ZM10.9887 98.1291C15.8799 98.1291 19.0668 100.657 19.0668 105.156C19.0668 109.544 15.358 112.07 10.8799 112.07H5.52178V117.597H0L0.0279388 98.1291H10.9887ZM127.355 101.796C122.685 101.796 120.24 104.516 120.24 107.96C120.24 111.21 122.684 113.903 127.355 113.903C132.026 113.903 134.47 111.293 134.47 107.96C134.47 104.572 131.998 101.795 127.356 101.795L127.355 101.796ZM10.6045 102.462H5.52178V108.015H10.3311C12.6929 108.015 13.9292 106.738 13.9292 105.212C13.9292 103.517 12.8855 102.462 10.6045 102.462ZM55.2557 102.129H49.5134V106.1H49.8726C51.5769 106.103 54.3288 106.123 54.8616 106.127H54.9534C57.3161 106.127 58.2231 105.101 58.2231 104.072C58.2231 103.073 57.6185 102.129 55.2557 102.129ZM111.465 0C112.257 0 112.899 0.642061 112.899 1.43418V84.6658C112.899 85.0462 112.748 85.411 112.479 85.6799C112.21 85.9489 111.846 86.1 111.465 86.1H28.2283C28.0397 86.1003 27.8529 86.0635 27.6786 85.9915C27.5043 85.9196 27.3459 85.814 27.2125 85.6808C27.079 85.5476 26.9732 85.3894 26.9009 85.2152C26.8287 85.0411 26.7915 84.8544 26.7915 84.6658V1.43418C26.7915 0.642061 27.4336 0 28.2283 0H111.465ZM104.995 43.8962H95.0554V53.7362H85.4187C77.3615 53.7362 70.6869 58.2331 70.6869 66.0436C70.6869 74.0509 76.4217 78.5478 85.2219 78.5478H104.997L104.995 43.8962ZM44.6355 43.8962H34.6962V78.5478H54.4715C63.2718 78.5478 69.0065 74.0509 69.0065 66.0436C69.0065 58.2331 62.3319 53.7338 54.2747 53.7338H44.6355V43.8962ZM53.2857 61.6132C57.537 61.6132 59.761 63.9133 59.761 66.6611C59.761 69.709 57.8839 71.6057 53.7802 71.6057H44.6355V61.6132H53.2857ZM95.0579 61.6132V71.6081H85.9108C81.8096 71.6081 79.9299 69.709 79.9299 66.6586C79.9299 63.9108 82.154 61.6132 86.4053 61.6132H95.0579ZM104.995 7.5522H85.2195C76.4192 7.5522 70.6844 12.0491 70.6844 20.0588C70.6844 27.8693 77.359 32.3662 85.4163 32.3662H95.0579V42.2062H104.995V7.5522ZM54.4715 7.5522H34.6987V42.2038H44.6355V32.3662H54.2747C62.3319 32.3662 69.0065 27.8693 69.0065 20.0588C69.0065 12.0491 63.2742 7.5522 54.4715 7.5522ZM95.0579 15.4291V25.4216H86.4028C82.1515 25.4216 79.9275 23.124 79.9275 20.3762C79.9275 17.3258 81.8047 15.4291 85.9083 15.4291H95.0579ZM53.7802 15.4291C57.8839 15.4291 59.761 17.3282 59.761 20.3737C59.761 23.124 57.537 25.4216 53.2857 25.4216H44.6355V15.4291H53.7802Z"/>
+    </svg>
+    <p class="subline">
+      <span lang="de">Liebesstücke</span>
+      <span lang="en">Pieces of love</span>
+    </p>
+  </div>
+
+  <div class="gallery">
+    <div class="stripwrap">
+    <div class="strip" id="strip" tabindex="0" aria-label="Referenzen aus dem Atelier — mit Pfeiltasten oder Ziehen durchblättern">
+      <div class="track" id="track">
+        <ul class="set">
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2025</div></div>
+            <img src="assets/hero-atelier.webp" width="733" height="1100" alt="Hand auf weissem Brautkleid mit Halo-Solitär">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Celine</span><span lang="en">For Celine</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
+            <img src="assets/vow-3.webp" width="733" height="1100" alt="Schwebende Hand mit Mémoire-Ring">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Elsa</span><span lang="en">For Elsa</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2026</div></div>
+            <img src="assets/vow-2.webp" width="825" height="1100" alt="Hand mit Halo-Solitär auf heller Strickdecke">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Elin</span><span lang="en">For Elin</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
+            <img src="assets/vow-4.webp" width="619" height="1100" alt="Ausgestreckte Hand mit Brillant-Solitär in Platin">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Ney</span><span lang="en">For Ney</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2025</div></div>
+            <img src="assets/vow-1.webp" width="825" height="1100" alt="Zwei Verlobungsringe mit Tropfen- und Smaragdschliff">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Yael</span><span lang="en">For Yael</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2026</div></div>
+            <img src="assets/vow-6.webp" width="734" height="1100" alt="Zwei ineinandergelegte Hände mit Verlobungsring im Kissenschliff">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Dalia</span><span lang="en">For Dalia</span></div></div>
+          </li>
+          <li>
+            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
+            <img src="assets/vow-5.webp" width="825" height="1100" alt="Zwei Hände übereinander mit mehreren Ringen">
+            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Sharyn</span><span lang="en">For Sharyn</span></div></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <button type="button" class="nav nav-prev" id="nav-prev" aria-label="Zurück / Previous">
+      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10.5 1L1.5 10l9 9"/></svg>
+    </button>
+    <button type="button" class="nav nav-next" id="nav-next" aria-label="Weiter / Next">
+      <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1.5 1l9 9-9 9"/></svg>
+    </button>
+    </div>
+    <div class="ticker" id="ticker" tabindex="0" role="slider" aria-label="Galerie-Position / Gallery position"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="ticker-inner" id="ticker-inner" aria-hidden="true"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="bar-bottom">
+  <p>© 2026 Peruso</p>
+  <div class="legal">
+    <button type="button" class="linklike" data-dialog="dlg-impressum">
+      <span lang="de">Impressum</span><span lang="en">Legal notice</span>
+    </button>
+    <button type="button" class="linklike" data-dialog="dlg-datenschutz">
+      <span lang="de">Datenschutz</span><span lang="en">Privacy</span>
+    </button>
+  </div>
+</footer>
+
+<!-- ———— contact ———— -->
+<dialog id="dlg-contact" aria-labelledby="contact-title">
+  <div class="dialog-head">
+    <p class="dialog-label"><span lang="de">Kontakt</span><span lang="en">Contact</span></p>
+    <button type="button" class="btn-close" data-close aria-label="Schliessen / Close">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+  </div>
+  <h2 id="contact-title">
+    <span lang="de">Das unverbindliche Erstgespräch</span>
+    <span lang="en">A first conversation, no strings attached</span>
+  </h2>
+  <p>
+    <span lang="de">Wir beraten Sie persönlich zu Ihrem Liebesstück — Verlobungsring, Trauringe oder ein anderes Stück für einen geliebten Menschen, für alle Paare und alle Geschlechter. Im Erstgespräch hören wir zu, danach entwerfen und fertigen wir von Hand in unserem Atelier.</span>
+    <span lang="en">We advise you personally on your piece of love — an engagement ring, wedding rings or another piece for someone you love, for all couples and all genders. In a first conversation we listen; then we design and craft by hand in our atelier.</span>
+  </p>
+  <p>
+    <span lang="de">Erzählen Sie uns, wovon Sie träumen.</span>
+    <span lang="en">Tell us what you are dreaming of.</span>
+  </p>
+  <div class="contact-rows">
+    <div class="contact-row">
+      <p class="contact-label"><span lang="de">Schreiben Sie uns</span><span lang="en">Write to us</span></p>
+      <a href="mailto:atelier@peruso.ch">atelier@peruso.ch</a>
+    </div>
+    <div class="contact-row">
+      <p class="contact-label"><span lang="de">Oder rufen Sie an</span><span lang="en">Or call</span></p>
+      <a href="tel:+41440000000">+41 44 000 00 00</a>
+    </div>
+  </div>
+</dialog>
+
+<!-- ———— impressum ———— -->
+<dialog id="dlg-impressum" aria-labelledby="impressum-title">
+  <div class="dialog-head">
+    <p class="dialog-label">Impressum</p>
+    <button type="button" class="btn-close" data-close aria-label="Schliessen / Close">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+  </div>
+  <h2 id="impressum-title"><span lang="de">Impressum</span><span lang="en">Legal notice</span></h2>
+  <p>
+    <span lang="de">Peruso [Rechtsform]<br>Musterstrasse 0<br>8000 Zürich, Schweiz<br><br>E-Mail: atelier@peruso.ch<br>Telefon: +41 44 000 00 00<br><br>Vertretungsberechtigte Person: [Name]<br>Handelsregister: [Nummer]</span>
+    <span lang="en">Peruso [legal form]<br>Musterstrasse 0<br>8000 Zurich, Switzerland<br><br>Email: atelier@peruso.ch<br>Phone: +41 44 000 00 00<br><br>Authorised representative: [name]<br>Commercial register: [number]</span>
+  </p>
+</dialog>
+
+<!-- ———— datenschutz ———— -->
+<dialog id="dlg-datenschutz" aria-labelledby="datenschutz-title">
+  <div class="dialog-head">
+    <p class="dialog-label"><span lang="de">Datenschutz</span><span lang="en">Privacy</span></p>
+    <button type="button" class="btn-close" data-close aria-label="Schliessen / Close">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+  </div>
+  <h2 id="datenschutz-title"><span lang="de">Datenschutzerklärung</span><span lang="en">Privacy policy</span></h2>
+  <p>
+    <span lang="de">Diese Website verwendet keine Cookies und keine Analyse- oder Tracking-Dienste. Beim Besuch werden durch den Hosting-Anbieter technisch notwendige Server-Logdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs) verarbeitet.</span>
+    <span lang="en">This website uses no cookies and no analytics or tracking services. When you visit, the hosting provider processes technically necessary server log data (e.g. IP address, time of access).</span>
+  </p>
+  <p>
+    <span lang="de">Zur Darstellung der Schriften werden Google Fonts von Servern von Google geladen; dabei wird Ihre IP-Adresse an Google übermittelt. Kontaktieren Sie uns per E-Mail oder Telefon, verarbeiten wir Ihre Angaben ausschliesslich zur Beantwortung Ihrer Anfrage.</span>
+    <span lang="en">To display the typefaces, Google Fonts are loaded from Google servers; your IP address is transmitted to Google in the process. If you contact us by email or phone, we process your details solely to respond to your enquiry.</span>
+  </p>
+  <p>
+    <span lang="de">Verantwortlich: Peruso, Musterstrasse 0, 8000 Zürich — atelier@peruso.ch</span>
+    <span lang="en">Controller: Peruso, Musterstrasse 0, 8000 Zurich — atelier@peruso.ch</span>
+  </p>
+</dialog>
+
+<script>
+(function(){
+  var html = document.documentElement;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ———— language ———— */
+  var titles = {
+    de: "Peruso — Verlobungsringe & Trauringe, von Hand gefertigt seit 1890",
+    en: "Peruso — Engagement & wedding rings, handcrafted since 1890"
+  };
+  function setLang(l){
+    html.setAttribute("data-lang", l);
+    html.setAttribute("lang", l);
+    document.title = titles[l];
+    document.getElementById("btn-de").setAttribute("aria-pressed", l === "de");
+    document.getElementById("btn-en").setAttribute("aria-pressed", l === "en");
+  }
+  document.getElementById("btn-de").addEventListener("click", function(){ setLang("de"); });
+  document.getElementById("btn-en").addEventListener("click", function(){ setLang("en"); });
+
+  /* ———— dialogs ———— */
+  document.querySelectorAll("[data-dialog]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.getElementById(btn.getAttribute("data-dialog")).showModal();
+    });
+  });
+  document.querySelectorAll("dialog").forEach(function(dlg){
+    dlg.querySelector("[data-close]").addEventListener("click", function(){ dlg.close(); });
+    dlg.addEventListener("click", function(e){
+      if (e.target === dlg){
+        var r = dlg.getBoundingClientRect();
+        var inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        if (!inside) dlg.close();
+      }
+    });
+  });
+
+  /* ————————————————————————————————————————
+     infinite looping gallery
+     transform-based: drag + momentum, wheel, arrows, seamless wrap
+  ———————————————————————————————————————— */
+  var strip = document.getElementById("strip");
+  var track = document.getElementById("track");
+  var baseSet = track.querySelector(".set");
+
+  /* clone the set twice for a seamless loop */
+  for (var i = 0; i < 2; i++){
+    var clone = baseSet.cloneNode(true);
+    clone.setAttribute("aria-hidden", "true");
+    clone.querySelectorAll("img").forEach(function(img){ img.alt = ""; });
+    track.appendChild(clone);
+  }
+
+  var setW = 0;
+  var current = 0;        /* rendered position   */
+  var target = 0;         /* where we are heading */
+  var velocity = 0;
+  var dragging = false;
+  var lastX = 0, lastT = 0;
+  var ease = reduced ? 1 : 0.085;
+
+  function measure(){ setW = baseSet.getBoundingClientRect().width; }
+  measure();
+  window.addEventListener("resize", measure);
+  window.addEventListener("load", measure);
+  track.querySelectorAll("img").forEach(function(img){
+    if (!img.complete) img.addEventListener("load", measure);
+  });
+
+  function mod(n, m){ return ((n % m) + m) % m; }
+
+  /* ———— the line bar ———— */
+  var ticker = document.getElementById("ticker");
+  var tickerInner = document.getElementById("ticker-inner");
+  var ticks = [];
+  var hoverF = null;                    /* hovered fraction, or null */
+
+  function buildTicks(){
+    var n = Math.max(36, Math.min(90, Math.floor(tickerInner.clientWidth / 16)));
+    if (n === ticks.length) return;
+    tickerInner.innerHTML = "";
+    ticks = [];
+    for (var i = 0; i < n; i++){
+      var t = document.createElement("span");
+      t.className = "tick";
+      tickerInner.appendChild(t);
+      ticks.push(t);
+    }
+  }
+  buildTicks();
+  window.addEventListener("resize", buildTicks);
+
+  function circDist(a, b){
+    var d = Math.abs(a - b);
+    return Math.min(d, 1 - d);
+  }
+
+  /* per-line state eases toward its target each frame:
+     needle (1 line, always) + motion wave (velocity-scaled) + hover wave */
+  var tickState = [];
+  function renderTicks(p, vNorm){
+    var n = ticks.length;
+    if (!n) return;
+    if (tickState.length !== n) tickState = new Array(n).fill(0);
+    var needleIdx = Math.round(p * (n - 1));
+    for (var i = 0; i < n; i++){
+      var f = n === 1 ? 0 : i / (n - 1);
+      var tgt = i === needleIdx ? 1 : 0;
+      var wave = Math.exp(-Math.pow(circDist(f, p) / 0.05, 2)) * vNorm;
+      if (wave > tgt) tgt = wave;
+      if (hoverF !== null){
+        var hb = Math.exp(-Math.pow((f - hoverF) / 0.04, 2));
+        if (hb > tgt) tgt = hb;
+      }
+      var s = tickState[i] += (tgt - tickState[i]) * 0.16;
+      if (s < 0.001) s = 0;
+      ticks[i].style.transform = "scaleY(" + (0.26 + 0.74 * s).toFixed(3) + ")";
+      ticks[i].style.opacity = (0.25 + 0.6 * s).toFixed(3);
+    }
+  }
+
+  var prevCurrent = 0, lastNow = 0;
+  function tick(){
+    var before = current;
+    current += (target - current) * ease;
+    if (!dragging && Math.abs(velocity) > 0.05){
+      target += velocity;
+      velocity *= 0.94;                 /* friction */
+    }
+    if (setW > 0){
+      /* keep numbers small; wrap both together so the lerp never sees the jump */
+      if (current > setW && target > setW){ current -= setW; target -= setW; before -= setW; }
+      if (current < 0 && target < 0){ current += setW; target += setW; before += setW; }
+      track.style.transform = "translate3d(" + (-mod(current, setW)) + "px,0,0)";
+
+      var p = mod(current, setW) / setW;
+      var vNorm = Math.min(1, Math.abs(current - before) / 18);   /* wave grows with speed */
+      renderTicks(p, vNorm);
+      var now = Math.round(p * 100);
+      if (now !== lastNow){ ticker.setAttribute("aria-valuenow", now); lastNow = now; }
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* drag / click / hover on the bar */
+  var scrubbing = false, scrubX = 0, scrubStart = 0;
+  function tickerFraction(clientX){
+    var r = tickerInner.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+  }
+  ticker.addEventListener("pointerdown", function(e){
+    scrubbing = true; velocity = 0;
+    var f = tickerFraction(e.clientX);
+    var p = mod(target, setW) / setW;
+    var d = f - p;
+    if (d > 0.5) d -= 1;
+    if (d < -0.5) d += 1;
+    target += d * setW;                 /* jump to clicked spot (shortest way) */
+    if (reduced) current = target;
+    scrubX = e.clientX; scrubStart = target;
+    ticker.setPointerCapture(e.pointerId);
+  });
+  ticker.addEventListener("pointermove", function(e){
+    hoverF = tickerFraction(e.clientX);
+    if (!scrubbing) return;
+    var r = tickerInner.getBoundingClientRect();
+    target = scrubStart + (e.clientX - scrubX) / r.width * setW;
+    if (reduced) current = target;
+  });
+  ticker.addEventListener("pointerup", function(){ scrubbing = false; });
+  ticker.addEventListener("pointercancel", function(){ scrubbing = false; });
+  ticker.addEventListener("pointerleave", function(){ if (!scrubbing) hoverF = null; });
+  ticker.addEventListener("keydown", function(e){
+    if (e.key === "ArrowRight"){ page(1); e.preventDefault(); }
+    if (e.key === "ArrowLeft"){ page(-1); e.preventDefault(); }
+  });
+
+  /* drag with momentum */
+  strip.addEventListener("pointerdown", function(e){
+    dragging = true; velocity = 0;
+    lastX = e.clientX; lastT = performance.now();
+    strip.classList.add("dragging");
+    strip.setPointerCapture(e.pointerId);
+  });
+  strip.addEventListener("pointermove", function(e){
+    if (!dragging) return;
+    var now = performance.now();
+    var dx = e.clientX - lastX;
+    target -= dx;
+    if (reduced) current = target;
+    var dt = Math.max(1, now - lastT);
+    velocity = -dx / dt * 16;           /* px per frame */
+    lastX = e.clientX; lastT = now;
+  });
+  function endDrag(){
+    if (!dragging) return;
+    dragging = false;
+    strip.classList.remove("dragging");
+    if (reduced) velocity = 0;
+  }
+  strip.addEventListener("pointerup", endDrag);
+  strip.addEventListener("pointercancel", endDrag);
+
+  /* wheel / trackpad */
+  strip.addEventListener("wheel", function(e){
+    e.preventDefault();
+    velocity = 0;
+    target += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * 0.9;
+    if (reduced) current = target;
+  }, { passive:false });
+
+  /* arrows */
+  function page(dir){
+    velocity = 0;
+    target += dir * Math.min(strip.clientWidth * 0.55, setW * 0.4);
+    if (reduced) current = target;
+  }
+  document.getElementById("nav-prev").addEventListener("click", function(){ page(-1); });
+  document.getElementById("nav-next").addEventListener("click", function(){ page(1); });
+
+  strip.addEventListener("keydown", function(e){
+    if (e.key === "ArrowRight"){ page(1); e.preventDefault(); }
+    if (e.key === "ArrowLeft"){ page(-1); e.preventDefault(); }
+  });
+
+  /* entrance */
+  window.addEventListener("load", function(){
+    requestAnimationFrame(function(){ document.body.classList.add("loaded"); });
+  });
+
+  window.__ready = true;
+})();
+</script>
+
+</body>
+</html>
