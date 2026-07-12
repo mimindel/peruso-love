@@ -1,14 +1,6 @@
 /* Peruso — Carousel-Inhalte. Wird vom Admin-Panel (admin.html) verwaltet. */
 window.PERUSO_ITEMS = [
   {
-    "img": "assets/ring-9.webp",
-    "w": 825,
-    "h": 1100,
-    "year": "2026",
-    "name": "Tamara",
-    "alt": "Hand mit Mémoire-Ring hält ein Weinglas"
-  },
-  {
     "img": "assets/hero-atelier.webp",
     "w": 733,
     "h": 1100,
@@ -23,6 +15,22 @@ window.PERUSO_ITEMS = [
     "year": "2024",
     "name": "Elsa",
     "alt": "Schwebende Hand mit Mémoire-Ring"
+  },
+  {
+    "img": "assets/ring-8.webp",
+    "w": 825,
+    "h": 1100,
+    "year": "2026",
+    "name": "Päsc",
+    "alt": "Hand mit schlichtem Trauring an einer Steinbar, Weingläser im Hintergrund"
+  },
+  {
+    "img": "assets/ring-9.webp",
+    "w": 825,
+    "h": 1100,
+    "year": "2026",
+    "name": "Tamara",
+    "alt": "Hand mit Mémoire-Ring hält ein Weinglas"
   },
   {
     "img": "assets/vow-2.webp",
@@ -63,13 +71,5 @@ window.PERUSO_ITEMS = [
     "year": "2024",
     "name": "Sharyn",
     "alt": "Zwei Hände übereinander mit mehreren Ringen"
-  },
-  {
-    "img": "assets/ring-8.webp",
-    "w": 825,
-    "h": 1100,
-    "year": "2026",
-    "name": "Päsc",
-    "alt": "Hand mit schlichtem Trauring an einer Steinbar, Weingläser im Hintergrund"
   }
 ];
