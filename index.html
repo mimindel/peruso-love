@@ -198,21 +198,11 @@ button{ font: inherit; color: inherit; }
 }
 .set img{
   display:block; width:auto;
-  height:56vh; height:68cqh;
+  height:56vh; height:68cqh;   /* per-item height set by JS from the skyline pattern */
   object-fit:cover;
   pointer-events:none;
   -webkit-user-drag:none; user-select:none;
 }
-/* slightly different heights — a skyline of rings */
-.set li:nth-child(1) img{ height:50vh; height:84cqh; }
-.set li:nth-child(2) img{ height:39vh; height:62cqh; }
-.set li:nth-child(3) img{ height:45vh; height:74cqh; }
-.set li:nth-child(4) img{ height:35vh; height:54cqh; }
-.set li:nth-child(5) img{ height:47vh; height:78cqh; }
-.set li:nth-child(6) img{ height:37vh; height:58cqh; }
-.set li:nth-child(7) img{ height:43vh; height:70cqh; }
-.set li:nth-child(8) img{ height:49vh; height:80cqh; }
-.set li:nth-child(9) img{ height:37vh; height:60cqh; }
 
 /* ———— arrows on either side, inverting over images ———— */
 .nav{
@@ -400,53 +390,7 @@ dialog p + p{ margin-top:.8rem; }
     <div class="stripwrap">
     <div class="strip" id="strip" tabindex="0" aria-label="Referenzen aus dem Atelier — mit Pfeiltasten oder Ziehen durchblättern">
       <div class="track" id="track">
-        <ul class="set">
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2026</div></div>
-            <img src="assets/ring-9.webp" width="825" height="1100" alt="Hand mit Mémoire-Ring hält ein Weinglas">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Luisa</span><span lang="en">For Luisa</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2025</div></div>
-            <img src="assets/hero-atelier.webp" width="733" height="1100" alt="Hand auf weissem Brautkleid mit Halo-Solitär">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Celine</span><span lang="en">For Celine</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
-            <img src="assets/vow-3.webp" width="733" height="1100" alt="Schwebende Hand mit Mémoire-Ring">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Elsa</span><span lang="en">For Elsa</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2026</div></div>
-            <img src="assets/vow-2.webp" width="825" height="1100" alt="Hand mit Halo-Solitär auf heller Strickdecke">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Elin</span><span lang="en">For Elin</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
-            <img src="assets/vow-4.webp" width="619" height="1100" alt="Ausgestreckte Hand mit Brillant-Solitär in Platin">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Ney</span><span lang="en">For Ney</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2025</div></div>
-            <img src="assets/vow-1.webp" width="825" height="1100" alt="Zwei Verlobungsringe mit Tropfen- und Smaragdschliff">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Yael</span><span lang="en">For Yael</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2026</div></div>
-            <img src="assets/vow-6.webp" width="734" height="1100" alt="Zwei ineinandergelegte Hände mit Verlobungsring im Kissenschliff">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Dalia</span><span lang="en">For Dalia</span></div></div>
-          </li>
-          <li>
-            <div class="label label-top" aria-hidden="true"><div>2024</div></div>
-            <img src="assets/vow-5.webp" width="825" height="1100" alt="Zwei Hände übereinander mit mehreren Ringen">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Sharyn</span><span lang="en">For Sharyn</span></div></div>
-          </li>
-                  <li>
-            <div class="label label-top" aria-hidden="true"><div>2025</div></div>
-            <img src="assets/ring-8.webp" width="825" height="1100" alt="Hand mit schlichtem Trauring an einer Steinbar, Weingläser im Hintergrund">
-            <div class="label label-bot" aria-hidden="true"><div><span lang="de">Für Marius</span><span lang="en">For Marius</span></div></div>
-          </li>
-        </ul>
+        <ul class="set" id="base-set"></ul>
       </div>
     </div>
     <button type="button" class="nav nav-prev" id="nav-prev" aria-label="Zurück / Previous">
@@ -545,6 +489,7 @@ dialog p + p{ margin-top:.8rem; }
   </p>
 </dialog>
 
+<script src="assets/items.js"></script>
 <script>
 (function(){
   var html = document.documentElement;
@@ -589,6 +534,30 @@ dialog p + p{ margin-top:.8rem; }
   var strip = document.getElementById("strip");
   var track = document.getElementById("track");
   var baseSet = track.querySelector(".set");
+
+  /* build the items from assets/items.js — the skyline height pattern repeats */
+  var HEIGHTS = [84, 62, 74, 54, 78, 58, 70, 80, 60];
+  var cqhOK = window.CSS && CSS.supports && CSS.supports("height", "1cqh");
+  (window.PERUSO_ITEMS || []).forEach(function(it, i){
+    var li = document.createElement("li");
+    var hv = HEIGHTS[i % HEIGHTS.length];
+    var top = document.createElement("div");
+    top.className = "label label-top"; top.setAttribute("aria-hidden", "true");
+    top.innerHTML = "<div></div>"; top.firstChild.textContent = it.year || "";
+    var img = document.createElement("img");
+    img.src = it.img; img.width = it.w || 825; img.height = it.h || 1100;
+    img.alt = it.alt || ("Ring für " + (it.name || ""));
+    img.style.height = cqhOK ? hv + "cqh" : Math.round(hv * 0.62) + "vh";
+    var bot = document.createElement("div");
+    bot.className = "label label-bot"; bot.setAttribute("aria-hidden", "true");
+    var span = document.createElement("div");
+    var de = document.createElement("span"); de.setAttribute("lang", "de"); de.textContent = "Für " + (it.name || "");
+    var en = document.createElement("span"); en.setAttribute("lang", "en"); en.textContent = "For " + (it.name || "");
+    span.appendChild(de); span.appendChild(en);
+    bot.appendChild(span);
+    li.appendChild(top); li.appendChild(img); li.appendChild(bot);
+    baseSet.appendChild(li);
+  });
 
   /* clone the set twice for a seamless loop */
   for (var i = 0; i < 2; i++){

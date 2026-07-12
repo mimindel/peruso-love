@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peruso — Verwaltung</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Mulish:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --porcelain: oklch(97.2% 0.007 84);
+  --champagne: oklch(93.2% 0.016 84);
+  --ink:       oklch(30% 0.014 78);
+  --ink-soft:  oklch(46% 0.018 78);
+  --bronze:    oklch(56% 0.078 80);
+  --bronze-deep: oklch(48% 0.078 80);
+  --hairline:  oklch(30% 0.014 78 / .16);
+  --ok:        oklch(55% 0.12 150);
+  --err:       oklch(52% 0.16 30);
+  --font-display: "Marcellus", serif;
+  --font-body: "Mulish", sans-serif;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  background: var(--porcelain); color: var(--ink);
+  font-family: var(--font-body); font-size:.95rem; line-height:1.6;
+  padding: clamp(1.2rem,4vw,3rem);
+  max-width: 860px; margin-inline:auto;
+}
+h1{ font-family: var(--font-display); font-weight:400; font-size:1.7rem; letter-spacing:.01em; }
+h2{
+  font-size:.72rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+  color: var(--bronze-deep); margin: 2.4rem 0 .9rem;
+}
+header{ display:flex; align-items:center; gap:1rem; padding-bottom:1.2rem; border-bottom:1px solid var(--hairline); }
+header svg{ width:2.4rem; height:2.4rem; color: var(--bronze); flex:none; }
+header .sub{ color: var(--ink-soft); font-size:.8rem; }
+header a{ margin-left:auto; color: var(--bronze-deep); font-size:.8rem; }
+
+label{ display:block; font-size:.7rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color: var(--ink-soft); margin-bottom:.25rem; }
+input[type="text"], input[type="password"]{
+  width:100%; padding:.55rem .7rem;
+  border:1px solid var(--hairline); background:#fff;
+  font: inherit; color: var(--ink);
+}
+input:focus-visible{ outline:2px solid var(--bronze); outline-offset:1px; }
+
+button{
+  font: inherit; cursor:pointer; border:none;
+  font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+}
+.btn-primary{ background: var(--bronze); color:#fff; padding:.8rem 1.4rem; }
+.btn-primary:hover{ background: var(--bronze-deep); }
+.btn-primary:disabled{ opacity:.4; cursor:default; }
+.btn-ghost{ background:none; border:1.5px solid var(--bronze); color: var(--ink); padding:.55rem 1rem; }
+.btn-ghost:hover{ background: var(--bronze); color:#fff; }
+.btn-icon{
+  background:none; border:1px solid var(--hairline); color: var(--ink-soft);
+  width:1.9rem; height:1.9rem; display:grid; place-items:center; font-size:.85rem; letter-spacing:0;
+}
+.btn-icon:hover{ border-color: var(--bronze); color: var(--ink); }
+.btn-icon:disabled{ opacity:.25; cursor:default; }
+.btn-danger:hover{ border-color: var(--err); color: var(--err); }
+
+.tokenbox{ background: var(--champagne); padding:1.1rem 1.2rem; margin-top:1.4rem; }
+.tokenbox .row{ display:flex; gap:.8rem; align-items:end; flex-wrap:wrap; }
+.tokenbox .grow{ flex:1; min-width:220px; }
+.tokenbox .hint{ font-size:.78rem; color: var(--ink-soft); margin-top:.6rem; }
+.tokenbox .remember{ display:flex; align-items:center; gap:.4rem; font-size:.78rem; color: var(--ink-soft); margin-top:.5rem; }
+.tokenbox .remember label{ all:unset; }
+
+.itemlist{ list-style:none; }
+.itemlist li{
+  display:grid;
+  grid-template-columns: 3.2rem 3.2rem 1fr 5.2rem auto;
+  gap:.8rem; align-items:center;
+  padding:.7rem 0; border-bottom:1px solid var(--hairline);
+}
+.itemlist .pos{ font-family: var(--font-display); font-size:1.1rem; color: var(--ink-soft); text-align:center; }
+.itemlist img{ width:3.2rem; height:3.2rem; object-fit:cover; display:block; background:var(--champagne); }
+.itemlist .fields{ display:grid; gap:.3rem; }
+.itemlist .fields input{ padding:.3rem .5rem; font-size:.88rem; }
+.itemlist .fields .alt-in{ font-size:.78rem; color: var(--ink-soft); }
+.itemlist .year-in{ text-align:center; }
+.itemlist .actions{ display:flex; gap:.35rem; }
+.itemlist li.is-new{ background: oklch(93.2% 0.016 84 / .5); }
+.badge-new{ font-size:.62rem; font-weight:700; letter-spacing:.1em; color: var(--bronze-deep); }
+
+.dropzone{
+  margin-top:.9rem;
+  border:1.5px dashed var(--bronze);
+  padding:1.6rem; text-align:center; color: var(--ink-soft);
+  cursor:pointer; font-size:.85rem;
+}
+.dropzone.dragover{ background: var(--champagne); }
+.dropzone input{ display:none; }
+
+.publishbar{ display:flex; align-items:center; gap:1rem; margin-top:1.6rem; flex-wrap:wrap; }
+.dirty-note{ font-size:.8rem; color: var(--bronze-deep); }
+.log{
+  margin-top:1rem; font-size:.8rem; color: var(--ink-soft);
+  white-space:pre-line; border-left:2px solid var(--hairline); padding-left:.8rem;
+  max-height:200px; overflow:auto;
+}
+.log .ok{ color: var(--ok); }
+.log .err{ color: var(--err); }
+footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="70 11 36.5 36.5" aria-hidden="true"><path fill="currentColor" d="M104.917 12c.322 0 .583.261.583.583v33.834a.583.583 0 0 1-.583.583H71.084a.583.583 0 0 1-.584-.583V12.583c0-.322.261-.583.584-.583zm-2.63 17.844h-4.04v4H94.33c-3.275 0-5.988 1.828-5.988 5.003 0 3.255 2.331 5.083 5.908 5.083h8.038V29.844zm-24.534 0h-4.04V43.93h8.038c3.577 0 5.908-1.828 5.908-5.083 0-3.175-2.713-5.004-5.988-5.004h-3.918v-3.999zm3.516 7.202c1.728 0 2.632.935 2.632 2.052 0 1.239-.763 2.01-2.431 2.01h-3.717v-4.062zm16.979 0v4.063H94.53c-1.667 0-2.431-.772-2.431-2.012 0-1.117.904-2.051 2.632-2.051h3.517zm4.039-21.976h-8.038c-3.577 0-5.908 1.828-5.908 5.084 0 3.175 2.713 5.003 5.988 5.003h3.919v4h4.039V15.07zm-20.536 0h-8.037v14.086h4.039v-3.999h3.918c3.275 0 5.988-1.828 5.988-5.003 0-3.256-2.33-5.084-5.908-5.084zm16.497 3.202v4.062H94.73c-1.728 0-2.632-.934-2.632-2.051 0-1.24.763-2.011 2.431-2.011h3.718zm-16.778 0c1.668 0 2.431.772 2.431 2.01 0 1.118-.904 2.052-2.632 2.052h-3.516v-4.062z"/></svg>
+  <div>
+    <h1>Peruso — Verwaltung</h1>
+    <p class="sub">Carousel-Bilder hinzufügen, ändern, sortieren und entfernen</p>
+  </div>
+  <a href="index.html" target="_blank">Website öffnen ↗</a>
+</header>
+
+<div class="tokenbox">
+  <div class="row">
+    <div class="grow">
+      <label for="token">GitHub-Token</label>
+      <input type="password" id="token" placeholder="github_pat_…" autocomplete="off">
+    </div>
+    <button type="button" class="btn-ghost" id="btn-check">Verbindung prüfen</button>
+  </div>
+  <div class="remember">
+    <input type="checkbox" id="remember">
+    <label for="remember">Auf diesem Gerät merken</label>
+    <span id="check-state"></span>
+  </div>
+  <p class="hint">Token erstellen: github.com → Settings → Developer settings → Fine-grained tokens → Zugriff nur auf <strong>peruso-love</strong>, Berechtigung <strong>Contents: Read and write</strong>. Das Token bleibt in diesem Browser und wird nirgendwohin sonst geschickt.</p>
+</div>
+
+<h2>Stücke <span id="count"></span></h2>
+<ul class="itemlist" id="list"></ul>
+
+<div class="dropzone" id="drop">
+  Bild hier ablegen oder klicken — Name und Jahr danach eintragen.<br>
+  (JPG/PNG, wird automatisch verkleinert und optimiert)
+  <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple>
+</div>
+
+<div class="publishbar">
+  <button type="button" class="btn-primary" id="btn-publish">Veröffentlichen</button>
+  <span class="dirty-note" id="dirty"></span>
+</div>
+<div class="log" id="log"></div>
+
+<footer>Reihenfolge = Reihenfolge im Carousel; die Bildgrössen folgen automatisch dem Muster. Entfernte Stücke löschen nur den Eintrag — die Bilddatei bleibt im Repository erhalten.</footer>
+
+<script src="assets/items.js"></script>
+<script>
+(function(){
+  var REPO = "mimindel/peruso-love";
+  var BRANCH = "main";
+  var API = "https://api.github.com/repos/" + REPO + "/contents/";
+
+  var items = (window.PERUSO_ITEMS || []).map(function(it){ return Object.assign({}, it); });
+  var dirty = false;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var list = $("list"), log = $("log");
+
+  /* ———— token ———— */
+  var tokenInput = $("token");
+  var remember = $("remember");
+  try {
+    var saved = localStorage.getItem("peruso_admin_token");
+    if (saved){ tokenInput.value = saved; remember.checked = true; }
+  } catch(e){}
+  function token(){ return tokenInput.value.trim(); }
+  remember.addEventListener("change", persistToken);
+  tokenInput.addEventListener("change", persistToken);
+  function persistToken(){
+    try {
+      if (remember.checked && token()) localStorage.setItem("peruso_admin_token", token());
+      else localStorage.removeItem("peruso_admin_token");
+    } catch(e){}
+  }
+
+  function gh(path, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({
+      "Authorization": "Bearer " + token(),
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    }, opts.headers || {});
+    return fetch(API + path + (opts.method === "GET" || !opts.method ? "?ref=" + BRANCH + "&t=" + Date.now() : ""), opts);
+  }
+
+  $("btn-check").addEventListener("click", function(){
+    var el = $("check-state");
+    el.textContent = " … prüfe";
+    gh("assets/items.js").then(function(r){
+      el.textContent = r.ok ? " ✓ Verbindung ok" : (" ✗ Fehler " + r.status + (r.status === 401 || r.status === 403 ? " — Token prüfen" : ""));
+      el.style.color = r.ok ? "var(--ok)" : "var(--err)";
+    }).catch(function(){ el.textContent = " ✗ Netzwerkfehler"; el.style.color = "var(--err)"; });
+  });
+
+  /* ———— list rendering ———— */
+  function markDirty(){
+    dirty = true;
+    $("dirty").textContent = "Ungespeicherte Änderungen";
+  }
+  window.addEventListener("beforeunload", function(e){
+    if (dirty){ e.preventDefault(); e.returnValue = ""; }
+  });
+
+  function render(){
+    list.innerHTML = "";
+    $("count").textContent = "(" + items.length + ")";
+    items.forEach(function(it, i){
+      var li = document.createElement("li");
+      if (it._new) li.classList.add("is-new");
+
+      var pos = document.createElement("span");
+      pos.className = "pos"; pos.textContent = i + 1;
+
+      var img = document.createElement("img");
+      img.src = it._preview || it.img;
+      img.alt = "";
+
+      var fields = document.createElement("div");
+      fields.className = "fields";
+      var nameIn = document.createElement("input");
+      nameIn.type = "text"; nameIn.value = it.name || ""; nameIn.placeholder = "Name";
+      nameIn.addEventListener("input", function(){ it.name = nameIn.value; markDirty(); });
+      var altIn = document.createElement("input");
+      altIn.type = "text"; altIn.className = "alt-in"; altIn.value = it.alt || "";
+      altIn.placeholder = "Bildbeschreibung (für Vorlesefunktion & Google)";
+      altIn.addEventListener("input", function(){ it.alt = altIn.value; markDirty(); });
+      fields.appendChild(nameIn); fields.appendChild(altIn);
+      if (it._new){
+        var b = document.createElement("span"); b.className = "badge-new"; b.textContent = "NEU — wird beim Veröffentlichen hochgeladen";
+        fields.appendChild(b);
+      }
+
+      var yearIn = document.createElement("input");
+      yearIn.type = "text"; yearIn.className = "year-in"; yearIn.value = it.year || ""; yearIn.placeholder = "Jahr";
+      yearIn.addEventListener("input", function(){ it.year = yearIn.value; markDirty(); });
+
+      var actions = document.createElement("div");
+      actions.className = "actions";
+      var up = document.createElement("button");
+      up.type = "button"; up.className = "btn-icon"; up.textContent = "↑"; up.title = "Nach vorne";
+      up.disabled = i === 0;
+      up.addEventListener("click", function(){ items.splice(i - 1, 0, items.splice(i, 1)[0]); markDirty(); render(); });
+      var down = document.createElement("button");
+      down.type = "button"; down.className = "btn-icon"; down.textContent = "↓"; down.title = "Nach hinten";
+      down.disabled = i === items.length - 1;
+      down.addEventListener("click", function(){ items.splice(i + 1, 0, items.splice(i, 1)[0]); markDirty(); render(); });
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "btn-icon btn-danger"; del.textContent = "✕"; del.title = "Entfernen";
+      del.addEventListener("click", function(){
+        if (confirm('"' + (it.name || "Stück " + (i + 1)) + '" aus dem Carousel entfernen?')){
+          items.splice(i, 1); markDirty(); render();
+        }
+      });
+      actions.appendChild(up); actions.appendChild(down); actions.appendChild(del);
+
+      li.appendChild(pos); li.appendChild(img); li.appendChild(fields);
+      li.appendChild(yearIn); li.appendChild(actions);
+      list.appendChild(li);
+    });
+  }
+
+  /* ———— adding images ———— */
+  var drop = $("drop"), fileIn = $("file");
+  drop.addEventListener("click", function(){ fileIn.click(); });
+  fileIn.addEventListener("change", function(){ [].forEach.call(fileIn.files, addFile); fileIn.value = ""; });
+  ["dragover", "dragenter"].forEach(function(t){
+    drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.add("dragover"); });
+  });
+  ["dragleave", "drop"].forEach(function(t){
+    drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.remove("dragover"); });
+  });
+  drop.addEventListener("drop", function(e){
+    [].forEach.call(e.dataTransfer.files, function(f){ if (/^image\//.test(f.type)) addFile(f); });
+  });
+
+  function addFile(file){
+    var url = URL.createObjectURL(file);
+    var im = new Image();
+    im.onload = function(){
+      var maxH = 1100;
+      var h = Math.min(maxH, im.naturalHeight);
+      var w = Math.round(im.naturalWidth * h / im.naturalHeight);
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(im, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(blob){
+        var ext = "webp";
+        if (!blob){ /* Safari without WebP encoding */
+          ext = "jpg";
+          c.toBlob(function(b2){ finish(b2, "jpg"); }, "image/jpeg", .85);
+          return;
+        }
+        finish(blob, ext);
+      }, "image/webp", .8);
+      function finish(blob, ext){
+        if (!blob){ logline("Bild konnte nicht verarbeitet werden.", "err"); return; }
+        var slug = (file.name.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "stueck").slice(0, 24);
+        var fname = "assets/piece-" + slug + "-" + Math.random().toString(36).slice(2, 6) + "." + ext;
+        items.push({
+          img: fname, w: w, h: h, year: String(new Date().getFullYear()), name: "", alt: "",
+          _new: true, _blob: blob, _preview: URL.createObjectURL(blob)
+        });
+        markDirty(); render();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }
+    };
+    im.src = url;
+  }
+
+  /* ———— publishing ———— */
+  function logline(msg, cls){
+    var d = document.createElement("div");
+    if (cls) d.className = cls;
+    d.textContent = msg;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function b64(buf){
+    var bytes = new Uint8Array(buf), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function getSha(path){
+    return gh(path).then(function(r){
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(path + ": " + r.status);
+      return r.json().then(function(j){ return j.sha; });
+    });
+  }
+
+  function putFile(path, contentB64, msg){
+    return getSha(path).then(function(sha){
+      var body = { message: msg, content: contentB64, branch: BRANCH };
+      if (sha) body.sha = sha;
+      return gh(path, { method: "PUT", body: JSON.stringify(body) }).then(function(r){
+        if (!r.ok) return r.json().then(function(j){ throw new Error(path + ": " + r.status + " " + (j.message || "")); });
+      });
+    });
+  }
+
+  function itemsJs(){
+    var clean = items.map(function(it){
+      return { img: it.img, w: it.w, h: it.h, year: it.year || "", name: it.name || "", alt: it.alt || ("Ring für " + (it.name || "")) };
+    });
+    return "/* Peruso — Carousel-Inhalte. Wird vom Admin-Panel (admin.html) verwaltet. */\n" +
+           "window.PERUSO_ITEMS = " + JSON.stringify(clean, null, 2) + ";\n";
+  }
+
+  $("btn-publish").addEventListener("click", function(){
+    if (!token()){ logline("Bitte zuerst das GitHub-Token eintragen.", "err"); return; }
+    var missing = items.filter(function(it){ return !(it.name || "").trim() || !(it.year || "").trim(); });
+    if (missing.length && !confirm(missing.length + " Stück(e) ohne Name oder Jahr — trotzdem veröffentlichen?")) return;
+
+    var btn = $("btn-publish");
+    btn.disabled = true;
+    log.innerHTML = "";
+    logline("Veröffentliche …");
+
+    var uploads = items.filter(function(it){ return it._new && it._blob; });
+    var chain = Promise.resolve();
+    uploads.forEach(function(it){
+      chain = chain.then(function(){
+        logline("Lade " + it.img + " hoch …");
+        return it._blob.arrayBuffer().then(function(buf){
+          return putFile(it.img, b64(buf), "Bild hinzugefügt: " + (it.name || it.img));
+        }).then(function(){ it._new = false; it._blob = null; });
+      });
+    });
+    chain.then(function(){
+      logline("Aktualisiere Inhaltsliste …");
+      return putFile("assets/items.js", btoa(unescape(encodeURIComponent(itemsJs()))), "Carousel aktualisiert (" + items.length + " Stücke)");
+    }).then(function(){
+      dirty = false;
+      $("dirty").textContent = "";
+      logline("✓ Veröffentlicht. Die Website ist in ca. 1 Minute aktuell.", "ok");
+      render();
+    }).catch(function(err){
+      logline("✗ " + err.message, "err");
+      logline("Nichts kaputt — Änderungen sind noch hier im Panel. Token/Netz prüfen und erneut veröffentlichen.");
+    }).finally(function(){ btn.disabled = false; });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
