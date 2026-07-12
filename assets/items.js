@@ -9,14 +9,6 @@ window.PERUSO_ITEMS = [
     "alt": "Hand auf weissem Brautkleid mit Halo-Solitär"
   },
   {
-    "img": "assets/vow-3.webp",
-    "w": 733,
-    "h": 1100,
-    "year": "2024",
-    "name": "Elsa",
-    "alt": "Schwebende Hand mit Mémoire-Ring"
-  },
-  {
     "img": "assets/ring-8.webp",
     "w": 825,
     "h": 1100,
@@ -31,6 +23,14 @@ window.PERUSO_ITEMS = [
     "year": "2026",
     "name": "Tamara",
     "alt": "Hand mit Mémoire-Ring hält ein Weinglas"
+  },
+  {
+    "img": "assets/vow-3.webp",
+    "w": 733,
+    "h": 1100,
+    "year": "2024",
+    "name": "Elsa",
+    "alt": "Schwebende Hand mit Mémoire-Ring"
   },
   {
     "img": "assets/vow-2.webp",
