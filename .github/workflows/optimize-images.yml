@@ -1,0 +1,35 @@
+name: Optimize uploaded images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/**"
+
+jobs:
+  optimize:
+    # skip runs triggered by this workflow's own commit
+    if: "!contains(github.event.head_commit.message, '[optimized]')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ImageMagick + WebP
+        run: sudo apt-get update -q && sudo apt-get install -y -q imagemagick webp
+
+      - name: Convert large JPG/PNG uploads to WebP
+        run: python3 .github/scripts/optimize.py
+
+      - name: Commit optimized images
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "peruso-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A
+            git commit -m "Bilder automatisch optimiert [optimized]"
+            git push
+          else
+            echo "no changes"
+          fi

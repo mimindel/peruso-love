@@ -1,0 +1,27 @@
+media:
+  input: assets
+  output: assets
+
+content:
+  - name: carousel
+    label: Ring-Galerie
+    type: file
+    path: assets/items.json
+    fields:
+      - name: items
+        label: Stücke
+        type: object
+        list: true
+        fields:
+          - name: img
+            label: Bild
+            type: image
+          - name: name
+            label: Name (erscheint als «Für …»)
+            type: string
+          - name: year
+            label: Jahr
+            type: string
+          - name: alt
+            label: Bildbeschreibung (für Vorlesefunktion & Google)
+            type: string

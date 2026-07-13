@@ -535,10 +535,11 @@ dialog p + p{ margin-top:.8rem; }
   var track = document.getElementById("track");
   var baseSet = track.querySelector(".set");
 
-  /* build the items from assets/items.js — the skyline height pattern repeats */
+  /* build the items — primary source assets/items.json, fallback items.js (local preview) */
   var HEIGHTS = [84, 62, 74, 54, 78, 58, 70, 80, 60];
   var cqhOK = window.CSS && CSS.supports && CSS.supports("height", "1cqh");
-  (window.PERUSO_ITEMS || []).forEach(function(it, i){
+  function buildGallery(itemsList){
+  (itemsList || []).forEach(function(it, i){
     var li = document.createElement("li");
     var hv = HEIGHTS[i % HEIGHTS.length];
     var top = document.createElement("div");
@@ -566,6 +567,16 @@ dialog p + p{ margin-top:.8rem; }
     clone.querySelectorAll("img").forEach(function(img){ img.alt = ""; });
     track.appendChild(clone);
   }
+  track.querySelectorAll("img").forEach(function(img){
+    if (!img.complete) img.addEventListener("load", measure);
+  });
+  measure();
+  }
+
+  fetch("assets/items.json", { cache: "no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){ buildGallery(d.items || d); })
+    .catch(function(){ buildGallery(window.PERUSO_ITEMS || []); });
 
   var setW = 0;
   var snapCoarse = window.matchMedia("(pointer: coarse)").matches;
@@ -583,12 +594,8 @@ dialog p + p{ margin-top:.8rem; }
       return li.offsetLeft + li.offsetWidth / 2;
     });
   }
-  measure();
   window.addEventListener("resize", measure);
   window.addEventListener("load", measure);
-  track.querySelectorAll("img").forEach(function(img){
-    if (!img.complete) img.addEventListener("load", measure);
-  });
 
   function mod(n, m){ return ((n % m) + m) % m; }
 
