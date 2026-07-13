@@ -124,17 +124,16 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
 <div class="tokenbox">
   <div class="row">
     <div class="grow">
-      <label for="token">GitHub-Token</label>
-      <input type="password" id="token" placeholder="github_pat_…" autocomplete="off">
+      <label for="pw">Passwort</label>
+      <input type="password" id="pw" placeholder="Admin-Passwort" autocomplete="current-password">
     </div>
-    <button type="button" class="btn-ghost" id="btn-check">Verbindung prüfen</button>
+    <button type="button" class="btn-ghost" id="btn-check">Anmelden</button>
   </div>
   <div class="remember">
     <input type="checkbox" id="remember">
     <label for="remember">Auf diesem Gerät merken</label>
     <span id="check-state"></span>
   </div>
-  <p class="hint">Token erstellen: github.com → Settings → Developer settings → Fine-grained tokens → Zugriff nur auf <strong>peruso-love</strong>, Berechtigung <strong>Contents: Read and write</strong>. Das Token bleibt in diesem Browser und wird nirgendwohin sonst geschickt.</p>
 </div>
 
 <h2>Stücke <span id="count"></span></h2>
@@ -157,49 +156,44 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
 <script src="assets/items.js"></script>
 <script>
 (function(){
-  var REPO = "mimindel/peruso-love";
-  var BRANCH = "main";
-  var API = "https://api.github.com/repos/" + REPO + "/contents/";
-
   var items = [];
   var dirty = false;
 
   var $ = function(id){ return document.getElementById(id); };
   var list = $("list"), log = $("log");
 
-  /* ———— token ———— */
-  var tokenInput = $("token");
+  /* ———— password ———— */
+  var pwInput = $("pw");
   var remember = $("remember");
   try {
-    var saved = localStorage.getItem("peruso_admin_token");
-    if (saved){ tokenInput.value = saved; remember.checked = true; }
+    var saved = localStorage.getItem("peruso_admin_pw");
+    if (saved){ pwInput.value = saved; remember.checked = true; }
   } catch(e){}
-  function token(){ return tokenInput.value.trim(); }
-  remember.addEventListener("change", persistToken);
-  tokenInput.addEventListener("change", persistToken);
-  tokenInput.addEventListener("input", persistToken);
-  function persistToken(){
+  function pw(){ return pwInput.value; }
+  function persistPw(){
     try {
-      if (remember.checked && token()) localStorage.setItem("peruso_admin_token", token());
-      else localStorage.removeItem("peruso_admin_token");
+      if (remember.checked && pw()) localStorage.setItem("peruso_admin_pw", pw());
+      else localStorage.removeItem("peruso_admin_pw");
     } catch(e){}
   }
+  remember.addEventListener("change", persistPw);
+  pwInput.addEventListener("change", persistPw);
+  pwInput.addEventListener("input", persistPw);
 
-  function gh(path, opts){
-    opts = opts || {};
-    opts.headers = Object.assign({
-      "Authorization": "Bearer " + token(),
-      "Accept": "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28"
-    }, opts.headers || {});
-    return fetch(API + path + (opts.method === "GET" || !opts.method ? "?ref=" + BRANCH + "&t=" + Date.now() : ""), opts);
+  function api(payload){
+    return fetch("api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-password": pw() },
+      body: JSON.stringify(payload)
+    });
   }
 
   $("btn-check").addEventListener("click", function(){
     var el = $("check-state");
     el.textContent = " … prüfe";
-    gh("assets/items.json").then(function(r){
-      el.textContent = r.ok ? " ✓ Verbindung ok" : (" ✗ Fehler " + r.status + (r.status === 401 || r.status === 403 ? " — Token prüfen" : ""));
+    el.style.color = "";
+    api({ action: "check" }).then(function(r){
+      el.textContent = r.ok ? " ✓ Angemeldet" : (r.status === 401 ? " ✗ Falsches Passwort" : " ✗ Fehler " + r.status);
       el.style.color = r.ok ? "var(--ok)" : "var(--err)";
     }).catch(function(){ el.textContent = " ✗ Netzwerkfehler"; el.style.color = "var(--err)"; });
   });
@@ -335,33 +329,15 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
     return btoa(bin);
   }
 
-  function getSha(path){
-    return gh(path).then(function(r){
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error(path + ": " + r.status);
-      return r.json().then(function(j){ return j.sha; });
+  function apiOk(r){
+    if (r.ok) return r.json();
+    return r.json().catch(function(){ return {}; }).then(function(j){
+      throw new Error(j.error || ("Fehler " + r.status));
     });
-  }
-
-  function putFile(path, contentB64, msg){
-    return getSha(path).then(function(sha){
-      var body = { message: msg, content: contentB64, branch: BRANCH };
-      if (sha) body.sha = sha;
-      return gh(path, { method: "PUT", body: JSON.stringify(body) }).then(function(r){
-        if (!r.ok) return r.json().then(function(j){ throw new Error(path + ": " + r.status + " " + (j.message || "")); });
-      });
-    });
-  }
-
-  function itemsJson(){
-    var clean = items.map(function(it){
-      return { img: it.img, w: it.w, h: it.h, year: it.year || "", name: it.name || "", alt: it.alt || ("Ring für " + (it.name || "")) };
-    });
-    return JSON.stringify({ items: clean }, null, 2) + "\n";
   }
 
   $("btn-publish").addEventListener("click", function(){
-    if (!token()){ logline("Bitte zuerst das GitHub-Token eintragen.", "err"); return; }
+    if (!pw()){ logline("Bitte zuerst das Passwort eintragen.", "err"); return; }
     var missing = items.filter(function(it){ return !(it.name || "").trim() || !(it.year || "").trim(); });
     if (missing.length && !confirm(missing.length + " Stück(e) ohne Name oder Jahr — trotzdem veröffentlichen?")) return;
 
@@ -376,13 +352,16 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
       chain = chain.then(function(){
         logline("Lade " + it.img + " hoch …");
         return it._blob.arrayBuffer().then(function(buf){
-          return putFile(it.img, b64(buf), "Bild hinzugefügt: " + (it.name || it.img));
+          return api({ action: "upload", path: it.img, content: b64(buf) }).then(apiOk);
         }).then(function(){ it._new = false; it._blob = null; });
       });
     });
     chain.then(function(){
       logline("Aktualisiere Inhaltsliste …");
-      return putFile("assets/items.json", btoa(unescape(encodeURIComponent(itemsJson()))), "Carousel aktualisiert (" + items.length + " Stücke)");
+      var clean = items.map(function(it){
+        return { img: it.img, w: it.w, h: it.h, year: it.year || "", name: it.name || "", alt: it.alt || ("Ring für " + (it.name || "")) };
+      });
+      return api({ action: "save", items: clean }).then(apiOk);
     }).then(function(){
       dirty = false;
       $("dirty").textContent = "";
@@ -390,7 +369,7 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
       render();
     }).catch(function(err){
       logline("✗ " + err.message, "err");
-      logline("Nichts kaputt — Änderungen sind noch hier im Panel. Token/Netz prüfen und erneut veröffentlichen.");
+      logline("Nichts kaputt — Änderungen sind noch hier im Panel. Passwort/Netz prüfen und erneut veröffentlichen.");
     }).finally(function(){ btn.disabled = false; });
   });
 
