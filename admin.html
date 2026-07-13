@@ -108,6 +108,12 @@ button{
 .log .ok{ color: var(--ok); }
 .log .err{ color: var(--err); }
 footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
+
+/* management UI is hidden until the password is verified */
+.gated{ display:none; }
+body.authed .gated{ display:block; }
+body.authed .locked-note{ display:none; }
+.locked-note{ margin-top:2.2rem; color: var(--ink-soft); font-size:.85rem; }
 </style>
 </head>
 <body>
@@ -136,6 +142,9 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
   </div>
 </div>
 
+<p class="locked-note">Bitte mit dem Passwort anmelden, um die Galerie zu verwalten.</p>
+
+<div class="gated">
 <h2>Stücke <span id="count"></span></h2>
 <ul class="itemlist" id="list"></ul>
 
@@ -152,6 +161,7 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
 <div class="log" id="log"></div>
 
 <footer>Reihenfolge = Reihenfolge im Carousel; die Bildgrössen folgen automatisch dem Muster. Entfernte Stücke löschen nur den Eintrag — die Bilddatei bleibt im Repository erhalten.</footer>
+</div>
 
 <script src="assets/items.js"></script>
 <script>
@@ -188,15 +198,26 @@ footer{ margin-top:3rem; font-size:.72rem; color: var(--ink-soft); }
     });
   }
 
-  $("btn-check").addEventListener("click", function(){
+  function setAuthed(ok){
+    document.body.classList.toggle("authed", !!ok);
+  }
+
+  function tryLogin(quiet){
     var el = $("check-state");
-    el.textContent = " … prüfe";
-    el.style.color = "";
-    api({ action: "check" }).then(function(r){
-      el.textContent = r.ok ? " ✓ Angemeldet" : (r.status === 401 ? " ✗ Falsches Passwort" : " ✗ Fehler " + r.status);
+    if (!quiet){ el.textContent = " … prüfe"; el.style.color = ""; }
+    return api({ action: "check" }).then(function(r){
+      setAuthed(r.ok);
+      el.textContent = r.ok ? " ✓ Angemeldet" : (quiet ? "" : (r.status === 401 ? " ✗ Falsches Passwort" : " ✗ Fehler " + r.status));
       el.style.color = r.ok ? "var(--ok)" : "var(--err)";
-    }).catch(function(){ el.textContent = " ✗ Netzwerkfehler"; el.style.color = "var(--err)"; });
-  });
+    }).catch(function(){
+      setAuthed(false);
+      if (!quiet){ el.textContent = " ✗ Netzwerkfehler"; el.style.color = "var(--err)"; }
+    });
+  }
+
+  $("btn-check").addEventListener("click", function(){ tryLogin(false); });
+  pwInput.addEventListener("keydown", function(e){ if (e.key === "Enter") tryLogin(false); });
+  if (pw()) tryLogin(true);   /* saved password → unlock automatically */
 
   /* ———— list rendering ———— */
   function markDirty(){
